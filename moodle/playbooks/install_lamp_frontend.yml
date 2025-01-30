@@ -32,6 +32,11 @@
           - php-cli
         state: present
 
+    - name: Habilitar el módulo rewrite de Apache
+      apache2_module:
+        name: rewrite
+        state: present
+
     - name: Modificamos el valor max_input_vars de PHP
       replace: 
         path: /etc/php/8.3/apache2/php.ini
@@ -101,10 +106,6 @@
         dest: /etc/apache2/sites-available/
         mode: 0755
 
-    - name: Habilitar el módulo rewrite de Apache
-      apache2_module:
-        name: rewrite
-        state: present
 
     - name: Reiniciar el servidor web Apache
       service:
