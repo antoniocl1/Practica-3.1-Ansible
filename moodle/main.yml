@@ -1,5 +1,5 @@
 ---
 - import_playbook: playbooks/install_lamp_frontend.yml
-#- import_playbook: playbooks/install_lamp_backend.yml
-#- import_playbook: playbooks/setup_letsencrypt.yml
-#- import_playbook: playbooks/deploy.yml
+- import_playbook: playbooks/install_lamp_backend.yml
+- import_playbook: playbooks/setup_letsencrypt.yml
+- import_playbook: playbooks/deploy.yml

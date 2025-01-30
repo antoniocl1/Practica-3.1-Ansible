@@ -11,7 +11,7 @@
     - name: Descargar el código fuente de moodle
       get_url:
         url: https://github.com/moodle/moodle/archive/refs/tags/v4.3.1.zip 
-        dest: /tmp
+        dest: /tmp/moodle-4.3.1.zip
         mode: 0755
 
     - name: Instalar unzip
@@ -27,27 +27,33 @@
 
     - name: Eliminar el directorio de instalación
       file:
-        path: /var/www/html/
+        path: /var/www/html/moodle
         state: absent
 
+    - name: Crear el directorio de instalación
+      file:
+        path: /var/www/html/moodle
+        state: directory
+        owner: www-data
+        group: www-data
+        mode: 0755
 
-    - name: Copiar contenido de moodle-4.3.1 a /var/www/html
+    - name: Copiar contenido de moodle-4.3.1 a /var/www/html/moodle
       copy:
         src: /tmp/moodle-4.3.1/
-        dest: /var/www/html
+        dest: /var/www/html/moodle
         remote_src: true
         force: yes
 
-
-    - name: Modificamos los permisos del directorio /var/www/html
+    - name: Modificar los permisos del directorio /var/www/html/moodle
       file:
-        path: /var/www/html
+        path: /var/www/html/moodle
         owner: www-data
         group: www-data
         recurse: yes
         mode: 0755
 
-    - name: Modificamos los permisos del directorio /var/www/html
+    - name: Modificar los permisos del directorio /var/moodledata
       file:
         path: /var/moodledata
         owner: www-data
@@ -56,32 +62,32 @@
         mode: 0755
         
     - name: Instalar moodle desde PHP CLI
-      command:
-        sudo -u www-data php /var/www/html/admin/cli/install.php \
-        --wwwroot={{ moodle.www_root }} \
-        --dataroot={{ moodle.data_root }} \
-        --dbtype={{ moodle.type }} \
-        --dbhost={{ moodle.host }} \
-        --dbname={{ db.name }} \
-        --dbuser={{ db.user }} \
-        --dbpass={{ db.password }} \
-        --fullname="{{ moodle.fullname }}" \
-        --shortname="{{ moodle.shortname }}" \
-        --summary="{{ moodle.summary }}" \
-        --adminuser={{ moodle.admin_user }} \
-        --adminpass={{ moodle.admin_pass }} \
-        --adminemail={{ moodle.admin_email }} \
-        --non-interactive \
+      command: >
+        sudo -u www-data php /var/www/html/moodle/admin/cli/install.php
+        --wwwroot={{ moodle.www_root }}
+        --dataroot={{ moodle.data_root }}
+        --dbtype={{ moodle.type }}
+        --dbhost={{ moodle.host }}
+        --dbname={{ db.name }}
+        --dbuser={{ db.user }}
+        --dbpass={{ db.password }}
+        --fullname="{{ moodle.fullname }}"
+        --shortname="{{ moodle.shortname }}"
+        --summary="{{ moodle.summary }}"
+        --adminuser={{ moodle.admin_user }}
+        --adminpass={{ moodle.admin_pass }}
+        --adminemail={{ moodle.admin_email }}
+        --non-interactive
         --agree-license
       args:
-        chdir: /var/www/html
+        chdir: /var/www/html/moodle
 
     - name: Configurar cron para Moodle
       become: yes
       ansible.builtin.cron:
         name: "Moodle Cron Job"
         minute: "*"
-        job: "/usr/bin/php /var/www/html/admin/cli/cron.php"
+        job: "/usr/bin/php /var/www/html/moodle/admin/cli/cron.php"
         state: present
 
     - name: Reiniciar servicio cron 
