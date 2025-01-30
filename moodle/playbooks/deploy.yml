@@ -87,8 +87,9 @@
       ansible.builtin.cron:
         name: "Moodle Cron Job"
         minute: "*"
-        job: "/usr/bin/php /var/www/html/moodle/admin/cli/cron.php"
+        job: "/usr/bin/php /var/www/html/admin/cli/cron.php >/dev/null 2>&1"
         state: present
+
 
     - name: Reiniciar servicio cron 
       become: yes
