@@ -1,0 +1,61 @@
+---
+- name: Playbook para instalar la pila LAMP en el Backend
+  hosts: backend
+  become: yes
+
+  vars_files:
+    - ../vars/variables.yml
+
+  tasks:
+
+    - name: Actualizar los repositorios
+      apt:
+        update_cache: yes
+
+    - name: Instalar el sistema gestor de bases de datos MySQL
+      apt:
+        name: mysql-server
+        state: present
+
+    - name: Instalamos el módulo de pymysql
+      apt:
+        name: python3-pymysql
+        state: present
+
+    - name: Eliminar la base de datos
+      mysql_db:
+        name: "{{ db.name }}"
+        state: absent
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+
+    - name: Crear una base de datos
+      mysql_db:
+        name: "{{ db.name }}"
+        state: present
+        login_unix_socket: /var/run/mysqld/mysqld.sock 
+
+    - name: Crear el usuario de la base de datos
+      mysql_user:         
+        name: "{{ db.user }}"
+        password: "{{ db.password }}"
+        priv: "{{ db.name }}.*:ALL"
+        host: "{{ db.frontend_private_ip }}"
+        state: present
+        login_unix_socket: /var/run/mysqld/mysqld.sock 
+
+    - name: Configuramos MySQL para permitir conexiones desde cualquier interfaz
+      replace:
+        path: /etc/mysql/mysql.conf.d/mysqld.cnf
+        regexp: 127.0.0.1
+        replace: 0.0.0.0
+
+    - name: Cambiar bind-address en mysqld.cnf
+      replace:
+        path: /etc/mysql/mysql.conf.d/mysqld.cnf
+        regexp: '^bind-address.*'
+        replace: 'bind-address = 0.0.0.0'
+
+    - name: Reiniciamos el servicio de base de datos
+      service:
+        name: mysql
+        state: restarted

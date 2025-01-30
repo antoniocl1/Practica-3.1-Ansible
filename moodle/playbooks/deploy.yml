@@ -1,0 +1,92 @@
+---
+- name: Playbook para hacer el deploy de la aplicación web moodle
+  hosts: frontend
+  become: yes
+
+  vars_files:
+    - ../vars/variables.yml
+
+  tasks:
+
+    - name: Descargar el código fuente de moodle
+      get_url:
+        url: https://github.com/moodle/moodle/archive/refs/tags/v4.3.1.zip 
+        dest: /tmp
+        mode: 0755
+
+    - name: Instalar unzip
+      apt: 
+        name: unzip
+        state: present
+
+    - name: Descomprimir el paquete de moodle
+      unarchive:
+        src: /tmp/moodle-4.3.1.zip  
+        dest: /tmp
+        remote_src: yes
+
+    - name: Eliminar el directorio de instalación
+      file:
+        path: /var/www/html/
+        state: absent
+
+
+    - name: Copiar contenido de moodle-4.3.1 a /var/www/html
+      copy:
+        src: /tmp/moodle-4.3.1/
+        dest: /var/www/html
+        remote_src: true
+        force: yes
+
+
+    - name: Modificamos los permisos del directorio /var/www/html
+      file:
+        path: /var/www/html
+        owner: www-data
+        group: www-data
+        recurse: yes
+        mode: 0755
+
+    - name: Modificamos los permisos del directorio /var/www/html
+      file:
+        path: /var/moodledata
+        owner: www-data
+        group: www-data
+        recurse: yes
+        mode: 0755
+        
+    - name: Instalar moodle desde PHP CLI
+      command:
+        sudo -u www-data php /var/www/html/admin/cli/install.php \
+        --wwwroot={{ moodle.www_root }} \
+        --dataroot={{ moodle.data_root }} \
+        --dbtype={{ moodle.type }} \
+        --dbhost={{ moodle.host }} \
+        --dbname={{ db.name }} \
+        --dbuser={{ db.user }} \
+        --dbpass={{ db.password }} \
+        --fullname="{{ moodle.fullname }}" \
+        --shortname="{{ moodle.shortname }}" \
+        --summary="{{ moodle.summary }}" \
+        --adminuser={{ moodle.admin_user }} \
+        --adminpass={{ moodle.admin_pass }} \
+        --adminemail={{ moodle.admin_email }} \
+        --non-interactive \
+        --agree-license
+      args:
+        chdir: /var/www/html
+
+    - name: Configurar cron para Moodle
+      become: yes
+      ansible.builtin.cron:
+        name: "Moodle Cron Job"
+        minute: "*"
+        job: "/usr/bin/php /var/www/html/admin/cli/cron.php"
+        state: present
+
+    - name: Reiniciar servicio cron 
+      become: yes
+      ansible.builtin.service:
+        name: cron
+        state: restarted
+        enabled: yes

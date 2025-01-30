@@ -1,0 +1,36 @@
+
+db:
+    name: db_name
+    user: db_user
+    password: moodlepass
+    frontend_private_ip: 172.31.36.209
+
+
+moodle:
+    name: Antonio-ASIR-Moodle
+    country: es
+    ssl: 1
+    firstname: AntonioJesus
+    lastname: CortesLopez
+    email: antonio@emailfalso.com
+    pass: Usuario0?
+    host: 172.31.18.45
+    type: mysqli 
+    www_root: "iawantonio.zapto.org"  
+    data_root: "/var/moodledata"  
+    fullname: "Sitio Moodle de Antonio" 
+    shortname: "MoodleAntonio" 
+    summary: "Este es un sitio Moodle."  
+    admin_user: "admin"  
+    admin_pass: "Usuario0?"  
+    admin_email: "admin@example.com"  
+    ruta: /var/www/html/admin/cli/install.php
+
+certbot:
+    email: antonio@emailfalso.com
+    domain: iawantonio.zapto.org
+
+phpmyadmin:
+    user: pma_user
+    password: pma_password
+    db_name: db_name
