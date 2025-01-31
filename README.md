@@ -121,19 +121,24 @@ El archivo `install_lamp_frontend.yml` define la instalación de Apache y PHP.
 
 ```yaml
 ---
-- name: Configurar la pila LAMP en el Frontend
+- name: Playbook para instalar la pila LAMP en el FrontEnd
   hosts: frontend
   become: yes
 
   tasks:
-```
 
-### Instalación de PHP y módulos necesarios
-
-```yaml
-    - name: Instalar PHP y módulos
+    - name: Actualizar los repositorios
       apt:
-        name:
+        update_cache: yes
+
+    - name: Instalar el servidor web Apache
+      apt:
+        name: apache2
+        state: present
+
+    - name: Instalar PHP y los módulos necesarios
+      apt: 
+        name: 
           - php
           - libapache2-mod-php
           - php-mysql
@@ -148,46 +153,125 @@ El archivo `install_lamp_frontend.yml` define la instalación de Apache y PHP.
           - php-opcache
           - php-cli
         state: present
-```
 
-### Configuración de parámetros de PHP
+    - name: Habilitar el módulo rewrite de Apache
+      apache2_module:
+        name: rewrite
+        state: present
 
-```yaml
-    - name: Ajustar max_input_vars
+    - name: Modificamos el valor max_input_vars de PHP
+      replace: 
+        path: /etc/php/8.3/apache2/php.ini
+        regexp: '^;max_input_vars\s=.*'
+        replace: max_input_vars = 5000
+
+    - name: Modificamos el valor max_input_vars de PHP
+      replace: 
+        path: /etc/php/8.3/cli/php.ini
+        regexp: '^;max_input_vars\s=.*'
+        replace: max_input_vars = 5000
+
+
+    - name: Modificamos el valor de memory_limit de PHP
+      replace: 
+        path: /etc/php/8.3/apache2/php.ini
+        regexp: '^;memory_limit\s=.*'
+        replace: memory_limit = 256M
+
+    - name: Modificamos el valor memory_limit de PHP CLI
+      replace:
+        path: /etc/php/8.3/cli/php.ini
+        regexp: '^;memory_limits\s=.*'
+        replace: memory_limit = 256M
+
+
+    - name: Modificamos el valor de post_max_size de PHP
+      replace: 
+        path: /etc/php/8.3/apache2/php.ini
+        regexp: '^;post_max_size\s=.*'
+        replace: post_max_size = 128M
+
+    - name: Modificamos el valor de post_max_size de PHP
+      replace: 
+        path: /etc/php/8.3/cli/php.ini
+        regexp: '^;post_max_size\s=.*'
+        replace: post_max_size = 128M
+
+
+    - name: Modificamos el valor de upload_max_filesize de PHP
       replace:
         path: /etc/php/8.3/apache2/php.ini
-        regexp: max_input_vars = 1000
-        replace: max_input_vars = 5000
-```
+        regexp: '^;upload_max_filesize\s=.*'
+        replace: upload_max_filesize = 128M
 
-```yaml
-    - name: Ajustar max_execution_time
+    - name: Modificamos el valor de upload_max_filesize de PHP
+      replace:
+        path: /etc/php/8.3/cli/php.ini
+        regexp: '^;upload_max_filesize\s=.*'
+        replace: upload_max_filesize = 128M
+
+    - name: Modificamos el valor max_execution_time de PHP
       replace:
         path: /etc/php/8.3/apache2/php.ini
         regexp: '^;max_execution_time\s=.*'
         replace: 'max_execution_time = 300'
-```
+        
+    - name: Modificamos el valor max_execution_time de PHP CLI
+      replace:
+        path: /etc/php/8.3/cli/php.ini
+        regexp: '^;max_execution_time\s=.*'
+        replace: 'max_execution_time = 300'
 
-### Configuración de Apache
-
-```yaml
-    - name: Copiar configuración de Apache
+    - name: Copiar el archivo de configuración de Apache
       copy:
         src: ../templates/000-default.conf
         dest: /etc/apache2/sites-available/
         mode: 0755
 
-    - name: Habilitar el módulo rewrite
-      apache2_module:
-        name: rewrite
-        state: present
 
-    - name: Reiniciar Apache
+    - name: Reiniciar el servidor web Apache
       service:
         name: apache2
         state: restarted
+# En este playbook instalamos apache y sus modulos necesario, lo habilitamos y modificamos los valores, despues lo movemos a sites-available y reiniciamos apache.
 ```
 
+## Configuración de Let’s Encrypt
+
+El `setup_letsencrypt.yml` configura el certificado SSL de:
+
+```yaml
+---
+- name: Playbook para configurar HTTPS
+  hosts: frontend
+  become: yes
+
+  vars_files:
+    - ../vars/variables.yml
+
+  tasks:
+
+    - name: Desinstalar instalaciones previas de Certbot
+      apt:
+        name: certbot
+        state: absent
+
+    - name: Instalar Certbot con snap
+      snap:
+        name: certbot
+        classic: yes
+        state: present
+
+    - name: Solicitar y configurar certificado SSL/TLS a Let's Encrypt con certbot
+      command:
+        certbot --apache \
+        -m {{ certbot.le_email }} \
+        --agree-tos \
+        --no-eff-email \
+        --non-interactive \
+        -d {{ certbot.le_domain }}
+# Esto es sencillo, pedimos el certificado a let's encrypt y debemos tener nuestro dominio definido en la variable "le_domain" en el archivo de "variables.yml"
+```
 ## Despliegue de Moodle
 
 El `deploy.yml` contiene las tareas necesarias para desplegar Moodle en el servidor.
@@ -225,23 +309,6 @@ El `deploy.yml` contiene las tareas necesarias para desplegar Moodle en el servi
         --adminemail={{ moodle.admin_email }} \
         --non-interactive \
         --agree-license
-```
-
-## Configuración de Let’s Encrypt
-
-El `setup_letsencrypt_https.yml` configura el certificado SSL:
-
-```yaml
-    - name: Instalar Certbot
-      apt:
-        name: certbot
-        state: present
-```
-
-```yaml
-    - name: Generar certificado SSL
-      command:
-        certbot --apache --non-interactive --agree-tos --email {{ ssl.email }} --domains {{ ssl.domain }}
 ```
 
 ## Archivo `inventory`
