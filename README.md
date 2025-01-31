@@ -379,7 +379,7 @@ El `deploy.yml` contiene las tareas necesarias para desplegar Moodle en el servi
         name: cron
         state: restarted
         enabled: yes
-# Aqui se hace lo tipico que ya hemos hecho antes en otras practicas, descargamos moodle en la carpeta temporal, lo descomprimimos, lo movemos, asignamos permisos a los directorios que estamos usando para moodle y usamos las variables definidas en variables.yml
+# Aqui se hace lo tipico que ya hemos hecho antes en otras practicas, descargamos moodle en la carpeta temporal, lo descomprimimos, lo movemos, asignamos permisos a los directorios que estamos usando para moodle y usamos las variables definidas en variables.yml, puse cron por si acaso, para asegurar de que esté habilitado en el arranque del sistema.
 ```
 
 ## Archivo `inventory`
@@ -400,7 +400,7 @@ ansible_ssh_common_args='-o StrictHostKeyChecking=accept-new'
 ```
 
 ## Comprobación del Funcionamiento 
-
+En esta captura muestro el la pantalla de Moodle y además el certificado otorgado por Let's Encrypt
 ![](moodle-letsencrypt.png)
 
 
