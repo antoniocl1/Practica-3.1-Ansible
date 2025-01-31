@@ -33,78 +33,86 @@ Debemos de tener creado un dominio en NO-IP que apunte a la ip de nuestro fronte
 
 ## Configuración de Ansible
 
-Para comenzar con Ansible ejecutamos los siguientes comandos:
+Para comenzar con utilizar ansible debemos instalarlo con los siguientes comandos:
 
 ```bash
 sudo apt update
 sudo apt install ansible -y
 ```
 
-Luego, creamos un archivo de `inventory` para definir los servidores:
+Luego, creamos un archivo de `inventory` en la carpeta inventory para definir los servidores:
 - **Frontend**
 - **Backend**
-
-Además, gestionaremos el código en un repositorio de GitHub.
 
 ## Arquitectura Backend
 
 En la carpeta `playbooks` creamos el archivo `install_lamp_backend.yml`, que será nuestro playbook para configurar la base de datos MySQL.
 
-### Estructura básica del playbook:
+### Estructura del playbook del Backend:
 
 ```yaml
 ---
-- name: Configurar la pila LAMP en el Backend
+- name: Playbook para instalar la pila LAMP en el Backend
   hosts: backend
   become: yes
 
   vars_files:
     - ../vars/variables.yml
-```
 
-- `name`: Descripción de la tarea.
-- `hosts`: Indica los servidores en los que se ejecutará.
-- `become`: Se ejecuta con privilegios de superusuario.
-- `vars_files`: Archivo que contiene las variables necesarias.
-
-### Tareas del playbook
-
-```yaml
   tasks:
-    - name: Actualizar paquetes
+
+    - name: Actualizar los repositorios
       apt:
         update_cache: yes
 
-    - name: Instalar MySQL
+    - name: Instalar el sistema gestor de bases de datos MySQL
       apt:
         name: mysql-server
         state: present
 
-    - name: Eliminar base de datos antigua
+    - name: Instalamos el módulo de pymysql
+      apt:
+        name: python3-pymysql
+        state: present
+
+    - name: Eliminar la base de datos
       mysql_db:
         name: "{{ db.name }}"
         state: absent
         login_unix_socket: /var/run/mysqld/mysqld.sock
 
-    - name: Crear usuario de MySQL
-      mysql_user:
+    - name: Crear una base de datos
+      mysql_db:
+        name: "{{ db.name }}"
+        state: present
+        login_unix_socket: /var/run/mysqld/mysqld.sock 
+
+    - name: Crear el usuario de la base de datos
+      mysql_user:         
         name: "{{ db.user }}"
         password: "{{ db.password }}"
         priv: "{{ db.name }}.*:ALL"
         host: "{{ db.frontend_private_ip }}"
         state: present
-        login_unix_socket: /var/run/mysqld/mysqld.sock
+        login_unix_socket: /var/run/mysqld/mysqld.sock 
 
-    - name: Permitir acceso externo a MySQL
+    - name: Configuramos MySQL para permitir conexiones desde cualquier interfaz
+      replace:
+        path: /etc/mysql/mysql.conf.d/mysqld.cnf
+        regexp: 127.0.0.1
+        replace: 0.0.0.0
+
+    - name: Cambiar bind-address en mysqld.cnf
       replace:
         path: /etc/mysql/mysql.conf.d/mysqld.cnf
         regexp: '^bind-address.*'
         replace: 'bind-address = 0.0.0.0'
 
-    - name: Reiniciar MySQL
+    - name: Reiniciamos el servicio de base de datos
       service:
         name: mysql
         state: restarted
+# No es un playbook complejo, simplemente instalamos MYSQL y sus módulos, después creamos la base de datos y el usuario y después cambiamos los bind-addresses para permitir conexiones de todas las ips (aunque no sea lo más seguro es lo más práctico para esta tarea teniendo en cuenta que tuve que eliminar las máquinas varias veces)
 ```
 
 ## Arquitectura Frontend
