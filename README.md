@@ -29,7 +29,7 @@ Estructura del repo:
 ```
 ## Dominio NO-IP
 Debemos de tener creado un dominio en NO-IP que apunte a la ip de nuestro frontend
-![](NO-IP.png)
+![](NOIP.png)
 
 ## Configuración de Ansible
 
