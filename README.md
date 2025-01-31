@@ -19,7 +19,7 @@ Estructura del repo:
 ├── inventory
 │   └── inventory
 ├── playbooks
-│   ├── setup_letsencrypt_https.yml
+│   ├── setup_letsencrypt.yml
 │   ├── deploy.yml
 │   ├── install_lamp_backend.yml
 │   └── install_lamp_frontend.yml
@@ -27,6 +27,9 @@ Estructura del repo:
 │   └── variables.yml
 └── main.yml
 ```
+## Dominio NO-IP
+Debemos de tener creado un dominio en NO-IP que apunte a la ip de nuestro frontend
+![](capturas/estructura-110.png)
 
 ## Configuración de Ansible
 
