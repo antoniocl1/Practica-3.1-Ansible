@@ -396,7 +396,7 @@ ansible_user=ubuntu
 ansible_ssh_private_key_file=/home/ubuntu/Practica-3.1/moodle/vockey.pem
 ansible_ssh_common_args='-o StrictHostKeyChecking=accept-new'     
 
-# Archivo muy importante donde estableceremos las ips del frontend y backend, usuario de la máquina y vockey que cogerán nuestro frontend y backend
+# Archivo muy importante donde estableceremos las ips del frontend y backend, usuario de la máquina y vockey que cogerán nuestro frontend y backend, y que acepte automaticamente la nueva clave
 ```
 
 ## Comprobación del Funcionamiento 
