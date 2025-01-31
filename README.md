@@ -43,7 +43,7 @@ sudo apt update
 sudo apt install ansible -y
 ```
 
-Luego, creamos un archivo de `inventory` en la carpeta inventory para definir los servidores:
+Luego, creamos un archivo de `inventory` en la carpeta inventory para definir el frontend y el backend:
 - **Frontend**
 - **Backend**
 
