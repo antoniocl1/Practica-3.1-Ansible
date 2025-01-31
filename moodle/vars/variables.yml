@@ -3,7 +3,7 @@ db:
     name: db_name
     user: db_user
     password: moodlepass
-    frontend_private_ip: 172.31.36.209
+    frontend_private_ip: 172.31.34.232
 
 
 moodle:
@@ -14,7 +14,7 @@ moodle:
     lastname: CortesLopez
     email: antonio@emailfalso.com
     pass: Usuario0?
-    host: 172.31.18.45
+    host: 172.31.37.200
     type: mysqli 
     www_root: "https://iawantonio.zapto.org"  
     data_root: "/var/moodledata"  

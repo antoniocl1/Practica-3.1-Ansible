@@ -1,46 +1,29 @@
 ---
-- name: Configurar Certbot y solicitar certificado SSL
+- name: Playbook para configurar HTTPS
   hosts: frontend
   become: yes
+
   vars_files:
-    - ../vars/variables.yml 
+    - ../vars/variables.yml
 
   tasks:
-    # Instalar snapd si no está presente
-    - name: Instalar snapd si no está presente
-      apt:
-        name: snapd
-        state: present
 
-    # Instalar el paquete base de snap si no está
-    - name: Instalar core de snap si no está presente
-      snap:
-        name: core
-        state: present
-
-    # Eliminar instalaciones anteriores de certbot con apt
-    - name: Eliminar Certbot instalado con apt (si existe)
+    - name: Desinstalar instalaciones previas de Certbot
       apt:
         name: certbot
         state: absent
 
-    # Instalar Certbot con snap
-    - name: Instalar Certbot usando snap
+    - name: Instalar Certbot con snap
       snap:
         name: certbot
+        classic: yes
         state: present
 
-    # Verificar las variables certbot
-    - name: Verificar las variables certbot
-      debug:
-        msg: "Email: {{ certbot.le_email }}, Domain: {{ certbot.le_domain }}"
-
-    # Solicitar un certificado SSL para el dominio con Certbot
-    - name: Solicitar certificado SSL para el dominio con Certbot
-      command: >
-        certbot --apache
-        -m "{{ certbot.le_email }}"
-        --agree-tos
-        --no-eff-email
-        -d "{{ certbot.le_domain }}"
-        --non-interactive
+    - name: Solicitar y configurar certificado SSL/TLS a Let's Encrypt con certbot
+      command:
+        certbot --apache \
+        -m {{ certbot.le_email }} \
+        --agree-tos \
+        --no-eff-email \
+        --non-interactive \
+        -d {{ certbot.le_domain }}
