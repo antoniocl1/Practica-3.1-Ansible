@@ -31,6 +31,9 @@ Estructura del repo:
 Debemos de tener creado un dominio en NO-IP que apunte a la ip de nuestro frontend
 ![](NOIP.png)
 
+(Muestro la ip del frontend para que veas que es la misma que he puesto en el NO-IP y que no me lo estoy inventando)
+![](ip-frontend.png)
+
 ## Configuración de Ansible
 
 Para comenzar con utilizar ansible debemos instalarlo con los siguientes comandos:
@@ -277,21 +280,70 @@ El `setup_letsencrypt.yml` configura el certificado SSL de:
 El `deploy.yml` contiene las tareas necesarias para desplegar Moodle en el servidor.
 
 ```yaml
-    - name: Descargar Moodle
+---
+- name: Playbook para hacer el deploy de la aplicación web moodle
+  hosts: frontend
+  become: yes
+
+  vars_files:
+    - ../vars/variables.yml
+
+  tasks:
+
+    - name: Descargar el código fuente de moodle
       get_url:
-        url: https://github.com/moodle/moodle/archive/refs/tags/v4.3.1.zip
+        url: https://github.com/moodle/moodle/archive/refs/tags/v4.3.1.zip 
         dest: /tmp
         mode: 0755
 
-    - name: Extraer Moodle
+    - name: Instalar unzip
+      apt: 
+        name: unzip
+        state: present
+
+    - name: Descomprimir el paquete de moodle
       unarchive:
-        src: /tmp/moodle-4.3.1.zip
+        src: /tmp/moodle-4.3.1.zip  
         dest: /tmp
         remote_src: yes
-```
 
-```yaml
-    - name: Instalar Moodle vía CLI
+    - name: Eliminar el directorio de instalación
+      file:
+        path: /var/www/html/
+        state: absent
+
+    - name: Crear el directorio de instalación
+      file:
+        path: /var/www/html
+        state: directory
+        owner: www-data
+        group: www-data
+        mode: 0755
+
+    - name: Copiar contenido de moodle-4.3.1 a /var/www/html
+      copy:
+        src: /tmp/moodle-4.3.1/
+        dest: /var/www/html
+        remote_src: true
+        force: yes
+
+    - name: Modificar los permisos del directorio /var/www/html
+      file:
+        path: /var/www/html
+        owner: www-data
+        group: www-data
+        recurse: yes
+        mode: 0755
+
+    - name: Modificar los permisos del directorio /var/moodledata
+      file:
+        path: /var/moodledata
+        owner: www-data
+        group: www-data
+        recurse: yes
+        mode: 0755
+        
+    - name: Instalar moodle desde PHP CLI
       command:
         sudo -u www-data php /var/www/html/admin/cli/install.php \
         --wwwroot={{ moodle.www_root }} \
@@ -309,22 +361,48 @@ El `deploy.yml` contiene las tareas necesarias para desplegar Moodle en el servi
         --adminemail={{ moodle.admin_email }} \
         --non-interactive \
         --agree-license
+      args:
+        chdir: /var/www/html
+
+    - name: Configurar cron para Moodle
+      become: yes
+      ansible.builtin.cron:
+        name: "Moodle Cron Job"
+        minute: "*"
+        job: "/usr/bin/php /var/www/html/admin/cli/cron.php >/dev/null 2>&1"
+        state: present
+
+
+    - name: Reiniciar servicio cron 
+      become: yes
+      ansible.builtin.service:
+        name: cron
+        state: restarted
+        enabled: yes
+# Aqui se hace lo tipico que ya hemos hecho antes en otras practicas, descargamos moodle en la carpeta temporal, lo descomprimimos, lo movemos, asignamos permisos a los directorios que estamos usando para moodle y usamos las variables definidas en variables.yml
 ```
 
 ## Archivo `inventory`
 
-```ini
+```bash
 [frontend]
-<ip_publica>
+<Aquí va la ip pública del frontend>
 
 [backend]
-<ip_publica>
+<Aquí va la ip pública del backend>
 
 [all:vars]
 ansible_user=ubuntu
-ansible_ssh_private_key_file=/home/ubuntu/Moodleansible/moodle/clave.pem
-ansible_ssh_common_args='-o StrictHostKeyChecking=accept-new'
+ansible_ssh_private_key_file=/home/ubuntu/Practica-3.1/moodle/vockey.pem
+ansible_ssh_common_args='-o StrictHostKeyChecking=accept-new'     
+
+# Archivo muy importante donde estableceremos las ips del frontend y backend, usuario de la máquina y vockey que cogerán nuestro frontend y backend
 ```
+
+## Comprobación del Funcionamiento 
+
+![](moodle-letsencrypt.png)
+
 
 ## Referencias
 - [Instalación de Ansible](https://josejuansanchez.org/taller-ansible-aws/#_ejemplo_12)
