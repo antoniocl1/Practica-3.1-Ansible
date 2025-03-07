@@ -29,7 +29,7 @@ Estructura del repo:
 ```
 ## Dominio NO-IP
 Debemos de tener creado un dominio en NO-IP que apunte a la ip de nuestro frontend
-![](NOIP.png)
+![](noip3-1.png)
 
 (Muestro la ip del frontend para que veas que es la misma que he puesto en el NO-IP y que no me lo estoy inventando)
 ![](ip-frontend.png)
@@ -400,6 +400,8 @@ ansible_ssh_common_args='-o StrictHostKeyChecking=accept-new'
 ```
 
 ## Comprobación del Funcionamiento 
+Aqui muestro la salida del comando
+![](salida3-1.png)
 En esta captura muestro el la pantalla de Moodle y además el certificado otorgado por Let's Encrypt
 ![](moodle-letsencrypt.png)
 
