@@ -32,7 +32,7 @@ Debemos de tener creado un dominio en NO-IP que apunte a la ip de nuestro fronte
 ![](noip3-1.png)
 
 (Muestro la ip del frontend para que veas que es la misma que he puesto en el NO-IP y que no me lo estoy inventando)
-![](ip-frontend.png)
+![](frontend.png)
 
 ## Configuración de Ansible
 
